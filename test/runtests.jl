@@ -1,6 +1,14 @@
 using AbstractGSBPs
 using Test
 
-@testset "AbstractGSBPs.jl" begin
-    # Write your tests here.
+@testset "AbstractGSBP.jl" begin
+    @testset "GSBPSkeleton" begin
+        include("gsbpskeleton.jl")
+    end
+    # @testset "Interface" begin
+    #     include("interface.jl")
+    # end
+    # @testset "AbstractModel" begin
+    #     include("abstractmodel.jl")
+    # end
 end
