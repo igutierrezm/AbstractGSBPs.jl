@@ -13,8 +13,8 @@ Return the `k0`th weight of the mixture implied by the model, namely:
 ```
 
 where ``\text{NegativeBinomial}(\cdot \mid s, p)`` denotes the pmf of
-a ``\text{NegativeBinomial}(s, p)`` distribution at ``\ell``. See
-[[1]](https://doi.org/10.1016/j.spl.2009.01.005) for a proof.
+a ``\text{NegativeBinomial}(s, p)`` distribution at ``\ell``
+[([1])](https://doi.org/10.1016/j.spl.2009.01.005).
 
 See also [`AbstractGSBP`](@ref).
 """
@@ -39,39 +39,45 @@ function get_weight(m::AbstractGSBP, k0::Int)
     return exp(logwk)
 end
 
-# function get_fgrid!(
-#     m::AbstractGSBP;
-#     fgrid::Vector{Float64},
-#     ygrid,
-#     xgrid
-# )
-#     (; y, x, w, K) = get_skeleton(m)
-#     val_ygrid(ygrid, y)
-#     val_fgrid(fgrid, ygrid)
-#     val_xgrid()
-#     w = get_weights(m, K[])
-#     for i in eachindex(fgrid)
-#         f0 = 0.0
-#         y0 = ygrid[i]
-#         x0 = xgrid[i]
-#         for k in 1:K[]
-#             f0 += w[k] * exp(logkernel(m, y0, x0, k))
-#         end
-#         fgrid[i] = f0
-#     end
-#     return fgrid
-# end
+@doc raw"""
+    get_fgrid!(m::AbstractGSBP; fgrid::Vector{Float64}, ygrid, xgrid)
 
-# function val_ygrid(ygrid, y)
-#     @assert !isempty(ygrid)
-#     @assert all(length.(ygrid) .== length(y[1]))
-# end
+Replace `fgrid` with ``p(y_{new} | x_{new}, \theta)`` for
+each ``(y_{new}, x_{new})`` in `zip(ygrid, xgrid)`, using the current atoms.
 
-# function val_fgrid(fgrid::Vector{Float64}, ygrid)
-#     @assert length(fgrid) == length(ygrid)
-# end
+See also [`AbstractGSBP`](@ref).
+"""
+function get_fgrid!(m::AbstractGSBP; fgrid::Vector{Float64}, ygrid, xgrid)
+    (; y, x, w, K) = get_skeleton(m)
+    w = zeros(K[])
+    val_ygrid(ygrid, y)
+    val_fgrid(fgrid, ygrid)
+    val_xgrid(xgrid, ygrid, x)
+    for k0 in 1:K[]
+        w[k0] = get_weight(m, k0)
+    end
+    for i in eachindex(fgrid)
+        f0 = 0.0
+        y0 = ygrid[i]
+        x0 = xgrid[i]
+        for k in 1:K[]
+            f0 += w[k] * exp(loglikcontrib(m, y0, x0, k))
+        end
+        fgrid[i] = f0
+    end
+    return fgrid
+end
 
-# function val_xgrid(xgrid, ygrid, x)
-#     @assert length(xgrid) == length(ygrid)
-#     @assert all(length.(xgrid) .== length(x[1]))
-# end
+function val_ygrid_(ygrid::Vector{T}, y::Vector{T}) where {T}
+    @assert !isempty(ygrid)
+    @assert all(length.(ygrid) .== length(y[1]))
+end
+
+function val_fgrid_(fgrid::Vector{Float64}, ygrid::Vector{T}) where {T}
+    @assert length(fgrid) == length(ygrid)
+end
+
+function val_xgrid_(xgrid::Vector{T}, ygrid::Vector{S}, x::Vector{T}) where {T, S}
+    @assert length(xgrid) == length(ygrid)
+    @assert all(length.(xgrid) .== length(x[1]))
+end
