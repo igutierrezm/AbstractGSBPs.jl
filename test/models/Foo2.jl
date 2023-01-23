@@ -5,12 +5,17 @@
 begin
     struct Foo2 <: AbstractGSBP
         skl::GSBPSkeleton{Float64, Float64}
-        function Foo2(; N::Int = 1, K::Int = 1)
+        function Foo2(;
+            N::Int = 1,
+            K::Int = 1,
+            p::Float64 = 0.5,
+            s::Float64 = 2.0
+        )
             y = rand(N)
             x = ones(N)
             r = rand(1:K, N)
             d = [rand(1:ri) for ri in r]
-            skl = GSBPSkeleton(; y, x, d, r)
+            skl = GSBPSkeleton(; y, x, d, r, p, s)
             new(skl)
         end
     end

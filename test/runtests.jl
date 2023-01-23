@@ -1,4 +1,5 @@
 using AbstractGSBPs
+using Distributions
 using Test
 
 # Add some testing models
