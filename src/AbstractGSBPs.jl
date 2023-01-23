@@ -99,7 +99,7 @@ export step_atoms!
 export step!
 
 # Each GSBP must be a subtype of AbstractGSBP:
-include("abstractgsbp.jl")
+include("abstractgsbp/abstractgsbp.jl")
 
 # Each GSBP must extend `GSBPSkeleton` by composition:
 include("gsbpskeleton.jl")
@@ -108,6 +108,8 @@ include("gsbpskeleton.jl")
 include("interface.jl")
 
 # The functionality provided for each GSBP satisfying the contract is here:
-include("methods.jl")
+include("abstractgsbp/accessors.jl")
+include("abstractgsbp/mutators.jl")
+include("abstractgsbp/samplers.jl")
 
 end

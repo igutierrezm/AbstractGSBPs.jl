@@ -1,68 +1,25 @@
 @doc raw"""
-    get_y(m::AbstractGSBP)
+    rand_rnew(m::AbstractGSBP)
 
-Return the sample of outcomes: ``y = (y_1, \ldots, y_N)``.
+Return a draw from ``p(r_{new} | s, p)``,
+using the current values of ``s`` and ``p``.
 
 See also [`AbstractGSBP`](@ref).
 """
-function get_y(m::AbstractGSBP)
-    return get_skeleton(m).y
+function rand_rnew(m::AbstractGSBP)
+    (; s, p) = get_skeleton(m)
+    return 1 + rand(NegativeBinomial(s[], p[]))
 end
 
 @doc raw"""
-    get_x(m::AbstractGSBP)
+    rand_dnew(m::AbstractGSBP, rnew::Int)
 
-Return the sample of features: ``x = (x_1, \ldots, x_N)``.
-
-See also [`AbstractGSBP`](@ref).
-"""
-function get_x(m::AbstractGSBP)
-    return get_skeleton(m).x
-end
-
-@doc raw"""
-    get_labels(m::AbstractGSBP)
-
-Return the vector of cluster labels: ``d = (d_1, \ldots, d_N)``.
+Return a draw from ``p(d_{new} | r_{new})``.
 
 See also [`AbstractGSBP`](@ref).
 """
-function get_labels(m::AbstractGSBP)
-    return get_skeleton(m).d
-end
-
-
-@doc raw"""
-    push_observation!(m::AbstractGSBP; y0, x0, d0::Int, r0::Int)
-
-Push an observation (including its unit-specific parameters) to the model.
-
-See also [`AbstractGSBP`](@ref).
-"""
-function push_observation!(m::AbstractGSBP; y0, x0, d0, r0)
-    @assert d0 <= r0
-    (; y, x, r, d) = get_skeleton(m)
-    push!(y, y0)
-    push!(x, x0)
-    push!(d, d0)
-    push!(r, r0)
-    return m
-end
-
-@doc raw"""
-    pop_observation!(m::AbstractGSBP)
-
-Pop an observation (including its unit-specific parameters) from the model.
-
-See also [`AbstractGSBP`](@ref).
-"""
-function pop_observation!(m::AbstractGSBP)
-    (; y, x, r, d) = get_skeleton(m)
-    pop!(y)
-    pop!(x)
-    pop!(d)
-    pop!(r)
-    return m
+function rand_dnew(m::AbstractGSBP, rnew::Int)
+    return rand(1:rnew)
 end
 
 @doc raw"""
@@ -215,30 +172,6 @@ end
 #     @assert length(xgrid) == length(ygrid)
 #     @assert all(length.(xgrid) .== length(x[1]))
 # end
-
-@doc raw"""
-    rand_rnew(m::AbstractGSBP)
-
-Return a draw from ``p(r_{new} | s, p)``,
-using the current values of ``s`` and ``p``.
-
-See also [`AbstractGSBP`](@ref).
-"""
-function rand_rnew(m::AbstractGSBP)
-    (; s, p) = get_skeleton(m)
-    return 1 + rand(NegativeBinomial(s[], p[]))
-end
-
-@doc raw"""
-    rand_dnew(m::AbstractGSBP, rnew::Int)
-
-Return a draw from ``p(d_{new} | r_{new})``.
-
-See also [`AbstractGSBP`](@ref).
-"""
-function rand_dnew(m::AbstractGSBP, rnew::Int)
-    return rand(1:rnew)
-end
 
 # Notes
 

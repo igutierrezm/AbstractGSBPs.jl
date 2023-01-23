@@ -13,6 +13,8 @@ include("models/Foo2.jl")
         include("interface.jl")
     end
     @testset "AbstractGSBP" begin
-        include("abstractgsbp.jl")
+        include("abstractgsbp/accessors.jl")
+        include("abstractgsbp/mutators.jl")
+        include("abstractgsbp/samplers.jl")
     end
 end
