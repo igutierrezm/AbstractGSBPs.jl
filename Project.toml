@@ -3,6 +3,11 @@ uuid = "cb3d5aec-0da4-4bd1-bdcb-5a67dc07bef0"
 authors = ["Iván Gutiérrez"]
 version = "0.1.0"
 
+[deps]
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+HypergeometricFunctions = "34004b35-14d8-5ef3-9330-4cdb6864b03a"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+
 [compat]
 julia = "1.7"
 

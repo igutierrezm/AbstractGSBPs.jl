@@ -1,29 +1,61 @@
+@doc raw"""
+    get_y(m::AbstractGSBP)
+
+Return the sample of outcomes: ``y = (y_1, \ldots, y_N)``.
+
+See also [`AbstractGSBP`](@ref).
+"""
 function get_y(m::AbstractGSBP)
     return get_skeleton(m).y
 end
 
+@doc raw"""
+    get_x(m::AbstractGSBP)
+
+Return the sample of features: ``x = (x_1, \ldots, x_N)``.
+
+See also [`AbstractGSBP`](@ref).
+"""
 function get_x(m::AbstractGSBP)
     return get_skeleton(m).x
 end
 
+@doc raw"""
+    get_labels(m::AbstractGSBP)
+
+Return the vector of cluster labels: ``d = (d_1, \ldots, d_N)``.
+
+See also [`AbstractGSBP`](@ref).
+"""
 function get_labels(m::AbstractGSBP)
     return get_skeleton(m).d
 end
 
-function get_ncomponents(m::AbstractGSBP)
-    return get_skeleton(m).K[]
-end
 
-function push_observation!(m::AbstractGSBP; ynew, xnew, dnew, rnew)
-    @assert dnew <= rnew
+@doc raw"""
+    push_observation!(m::AbstractGSBP; y0, x0, d0::Int, r0::Int)
+
+Push an observation (including its unit-specific parameters) to the model.
+
+See also [`AbstractGSBP`](@ref).
+"""
+function push_observation!(m::AbstractGSBP; y0, x0, d0, r0)
+    @assert d0 <= r0
     (; y, x, r, d) = get_skeleton(m)
-    push!(y, ynew)
-    push!(x, xnew)
-    push!(d, dnew)
-    push!(r, rnew)
+    push!(y, y0)
+    push!(x, x0)
+    push!(d, d0)
+    push!(r, r0)
     return m
 end
 
+@doc raw"""
+    pop_observation!(m::AbstractGSBP)
+
+Pop an observation (including its unit-specific parameters) from the model.
+
+See also [`AbstractGSBP`](@ref).
+"""
 function pop_observation!(m::AbstractGSBP)
     (; y, x, r, d) = get_skeleton(m)
     pop!(y)
@@ -33,22 +65,39 @@ function pop_observation!(m::AbstractGSBP)
     return m
 end
 
-function step!(m::AbstractGSBP)
-    step_atoms!(m, get_ncomponents(m))
-    step_p!(m)
-    step_s!(m)
+@doc raw"""
+    step!(m::AbstractGSBP; update_s::Bool = false)
+
+Update ``(\theta, d, r, p)`` as described in
+[[1]](https://doi.org/10.1016/j.spl.2009.01.005).
+If `update_s = true`, it will also update ``s`` as described in
+[[2]](https://pubmed.ncbi.nlm.nih.gov/25279391).
+
+See also [`AbstractGSBP`](@ref).
+"""
+function step!(m::AbstractGSBP; update_s::Bool = false)
+    step_atoms!(m, get_K(m))
     step_d!(m)
     step_r!(m)
     step_K!(m)
+    step_p!(m)
+    update_s && step_s!(m)
     return m
 end
 
+# Get K := maximum(r)
+function get_K(m::AbstractGSBP)
+    return get_skeleton(m).K[]
+end
+
+# Update p, as described in [1]
 function step_p!(m::AbstractGSBP)
     (; a0p, b0p, r, s, p) = get_skeleton(m)
     p[] = rand(Beta(s[] * length(r) + a0p, sum(r) + b0p - length(r)))
     return m
 end
 
+# Update s, as described in [2]
 function step_s!(m::AbstractGSBP)
     (; a0s, b0s, r, s, p) = get_skeleton(m)
     s0 = s[]
@@ -66,6 +115,7 @@ function step_s!(m::AbstractGSBP)
     return m
 end
 
+# Update d, as described in [1]
 function step_d!(m::AbstractGSBP)
     (; y, x, r, d) = get_skeleton(m)
     for i in eachindex(y)
@@ -75,7 +125,7 @@ function step_d!(m::AbstractGSBP)
         kstar = 0
         pstar = -Inf
         for k in 1:ri
-            p = logkernel(m, yi, xi, k) - log(-log(rand()))
+            p = loglikcontrib(m, yi, xi, k) - log(-log(rand()))
             if p > pstar
                 kstar = k
                 pstar = p
@@ -86,6 +136,7 @@ function step_d!(m::AbstractGSBP)
     return m
 end
 
+# Update r, as described in [1]
 function step_r!(m::AbstractGSBP)
     (; r, d, s, p) = get_skeleton(m)
     for i in eachindex(r)
@@ -96,36 +147,37 @@ function step_r!(m::AbstractGSBP)
     return m
 end
 
+# Update K := maximum(r; init = 0)
 function step_K!(m::AbstractGSBP)
     (; r, K) = get_skeleton(m)
-    K[] = 1 + maximum(r; init = 0)
+    K[] = maximum(r; init = 0)
     return m
 end
 
-function get_weights(m::AbstractGSBP, C::Int)
-    (; p, s) = get_skeleton(m)
-    w = zeros(C)
-    wrem = 1.0
-    for c = 1:(C - 1)
-        if s[] ≈ 2.0
-            w[c] = p[] * (1 - p[])^(c - 1)
-        elseif s[] ≈ 3.0
-            w[c] = p[] * (1 - p[])^(c - 1) * (1 + c * p[]) / 2
-        else
-            logwc =
-                - log(c) -
-                log(c + s[] - 1) -
-                logabsbeta(c, s[])[1] +
-                s[] * log(p[]) +
-                (c - 1) * log(1 - p[]) +
-                log(_₂F₁(big(c + s[] - 1), 1, c + 1, 1 - p[]))
-            w[c] = exp(logwc)
-        end
-        wrem -= w[c]
-    end
-    w[C] = wrem
-    return w
-end
+# function get_weights(m::AbstractGSBP, C::Int)
+#     (; p, s) = get_skeleton(m)
+#     w = zeros(C)
+#     wrem = 1.0
+#     for c = 1:(C - 1)
+#         if s[] ≈ 2.0
+#             w[c] = p[] * (1 - p[])^(c - 1)
+#         elseif s[] ≈ 3.0
+#             w[c] = p[] * (1 - p[])^(c - 1) * (1 + c * p[]) / 2
+#         else
+#             logwc =
+#                 - log(c) -
+#                 log(c + s[] - 1) -
+#                 logabsbeta(c, s[])[1] +
+#                 s[] * log(p[]) +
+#                 (c - 1) * log(1 - p[]) +
+#                 log(_₂F₁(big(c + s[] - 1), 1, c + 1, 1 - p[]))
+#             w[c] = exp(logwc)
+#         end
+#         wrem -= w[c]
+#     end
+#     w[C] = wrem
+#     return w
+# end
 
 # function get_fgrid!(
 #     m::AbstractGSBP;
@@ -133,7 +185,7 @@ end
 #     ygrid,
 #     xgrid
 # )
-#     (; y, x, K, w) = get_skeleton(m)
+#     (; y, x, w, K) = get_skeleton(m)
 #     val_ygrid(ygrid, y)
 #     val_fgrid(fgrid, ygrid)
 #     val_xgrid()
@@ -164,11 +216,34 @@ end
 #     @assert all(length.(xgrid) .== length(x[1]))
 # end
 
-function sim_rnew(m::AbstractGSBP)
+@doc raw"""
+    rand_rnew(m::AbstractGSBP)
+
+Return a draw from ``p(r_{new} | s, p)``,
+using the current values of ``s`` and ``p``.
+
+See also [`AbstractGSBP`](@ref).
+"""
+function rand_rnew(m::AbstractGSBP)
     (; s, p) = get_skeleton(m)
     return 1 + rand(NegativeBinomial(s[], p[]))
 end
 
-function sim_rnew(m::AbstractGSBP, rnew)
+@doc raw"""
+    rand_dnew(m::AbstractGSBP, rnew::Int)
+
+Return a draw from ``p(d_{new} | r_{new})``.
+
+See also [`AbstractGSBP`](@ref).
+"""
+function rand_dnew(m::AbstractGSBP, rnew::Int)
     return rand(1:rnew)
 end
+
+# Notes
+
+# [1]
+# https://doi.org/10.1016/j.csda.2020.106940
+
+# [2]
+# https://pubmed.ncbi.nlm.nih.gov/25279391

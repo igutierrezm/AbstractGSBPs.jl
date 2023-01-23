@@ -10,6 +10,10 @@ breaking process ([[1]](https://doi.org/10.1016/j.spl.2009.01.005),
 y_i | x_i, d_i, \theta_{d_i}
 & \sim
 f(\cdot | x_i, \theta_{d_i}),
+&
+i
+&=
+1, \ldots, N
 \\
 d_i | r_i
 & \sim
