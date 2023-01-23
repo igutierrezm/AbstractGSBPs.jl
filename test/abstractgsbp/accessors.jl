@@ -18,3 +18,11 @@ end
     @test get_labels(m) === m.skl.d
     @test 0 == @allocated get_labels(m)
 end
+
+@testset "get_K()" begin
+    for K in [1, 5, 10]
+        m = Foo2(; N = 100, K)
+        @inferred AbstractGSBPs.get_K(m)
+        @test AbstractGSBPs.get_K(m) == maximum(m.skl.r)
+    end
+end

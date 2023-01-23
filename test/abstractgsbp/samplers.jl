@@ -1,11 +1,3 @@
-@testset "get_K()" begin
-    for K in [1, 5, 10]
-        m = Foo2(; N = 100, K)
-        @inferred AbstractGSBPs.get_K(m)
-        @test AbstractGSBPs.get_K(m) == maximum(m.skl.r)
-    end
-end
-
 @testset "rand_rnew()" begin
     for (s, p) in Iterators.product([1.0, 2.0, 100], [1e-5, 5e-1, 1 - 1e-5])
         m = Foo2(; p, s)
@@ -33,10 +25,10 @@ end
     m = Foo2(; N = 100, K = 10)
     d0 = deepcopy(get_labels(m))
     @inferred AbstractGSBPs.step_d!(m)
-    @test any(m.skl.d .!= d0)
-    @test all(m.skl.d .<= m.skl.r)
-    @test all(m.skl.d .∈ Ref([1, 3]))
     @test length(m.skl.d) == length(d0)
+    @test all(m.skl.d .∈ Ref([1, 3]))
+    @test all(m.skl.d .<= m.skl.r)
+    @test any(m.skl.d .!= d0)
 end
 
 @testset "step_r!()" begin
@@ -72,6 +64,14 @@ end
     @test m.skl.s[] != s0
 end
 
+@testset "step!()" begin
+    m = Foo2(; N = 100, K = 10)
+    @test 0 == @allocated step!(m)
+    @inferred step!(m)
+    for i in 1:100
+        step!(m)
+    end
+end
 
 # # @testset "step_d!()" begin
 # #     m = Skeleton(; y = rand(100), x = ones(100)) |> Foo
@@ -179,14 +179,4 @@ end
 # #         ntrues += (1 <= dnew <= rnew)
 # #     end
 # #     @test ntrues == 100
-# # end
-
-# # @testset "Check step!()" begin
-# #     m = Skeleton(; y = rand(100), x = rand(100)) |> Foo
-# #     @inferred step!(m)
-# #     @test 0 == @allocated step!(m)
-# #     for i in 1:100
-# #         m = Skeleton(; y = rand(100), x = rand(100)) |> Foo
-# #         step!(m)
-# #     end
 # # end
