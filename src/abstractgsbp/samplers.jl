@@ -111,68 +111,6 @@ function step_K!(m::AbstractGSBP)
     return m
 end
 
-# function get_weights(m::AbstractGSBP, C::Int)
-#     (; p, s) = get_skeleton(m)
-#     w = zeros(C)
-#     wrem = 1.0
-#     for c = 1:(C - 1)
-#         if s[] ≈ 2.0
-#             w[c] = p[] * (1 - p[])^(c - 1)
-#         elseif s[] ≈ 3.0
-#             w[c] = p[] * (1 - p[])^(c - 1) * (1 + c * p[]) / 2
-#         else
-#             logwc =
-#                 - log(c) -
-#                 log(c + s[] - 1) -
-#                 logabsbeta(c, s[])[1] +
-#                 s[] * log(p[]) +
-#                 (c - 1) * log(1 - p[]) +
-#                 log(_₂F₁(big(c + s[] - 1), 1, c + 1, 1 - p[]))
-#             w[c] = exp(logwc)
-#         end
-#         wrem -= w[c]
-#     end
-#     w[C] = wrem
-#     return w
-# end
-
-# function get_fgrid!(
-#     m::AbstractGSBP;
-#     fgrid::Vector{Float64},
-#     ygrid,
-#     xgrid
-# )
-#     (; y, x, w, K) = get_skeleton(m)
-#     val_ygrid(ygrid, y)
-#     val_fgrid(fgrid, ygrid)
-#     val_xgrid()
-#     w = get_weights(m, K[])
-#     for i in eachindex(fgrid)
-#         f0 = 0.0
-#         y0 = ygrid[i]
-#         x0 = xgrid[i]
-#         for k in 1:K[]
-#             f0 += w[k] * exp(logkernel(m, y0, x0, k))
-#         end
-#         fgrid[i] = f0
-#     end
-#     return fgrid
-# end
-
-# function val_ygrid(ygrid, y)
-#     @assert !isempty(ygrid)
-#     @assert all(length.(ygrid) .== length(y[1]))
-# end
-
-# function val_fgrid(fgrid::Vector{Float64}, ygrid)
-#     @assert length(fgrid) == length(ygrid)
-# end
-
-# function val_xgrid(xgrid, ygrid, x)
-#     @assert length(xgrid) == length(ygrid)
-#     @assert all(length.(xgrid) .== length(x[1]))
-# end
-
 # Notes
 
 # [1]

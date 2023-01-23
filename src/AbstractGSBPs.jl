@@ -78,6 +78,7 @@ export AbstractGSBP
 export GSBPSkeleton
 export get_labels
 export get_skeleton
+export get_weight
 export get_x
 export get_y
 export init_a0p
@@ -109,6 +110,7 @@ include("interface.jl")
 
 # The functionality provided for each GSBP satisfying the contract is here:
 include("abstractgsbp/accessors.jl")
+include("abstractgsbp/generators.jl")
 include("abstractgsbp/mutators.jl")
 include("abstractgsbp/samplers.jl")
 

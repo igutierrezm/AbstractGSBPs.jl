@@ -15,6 +15,7 @@ include("models/Foo2.jl")
     end
     @testset "AbstractGSBP" begin
         include("abstractgsbp/accessors.jl")
+        include("abstractgsbp/generators.jl")
         include("abstractgsbp/mutators.jl")
         include("abstractgsbp/samplers.jl")
     end
