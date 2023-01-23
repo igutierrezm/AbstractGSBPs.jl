@@ -1,3 +1,11 @@
+@testset "get_K()" begin
+    for K in [1, 5, 10]
+        m = Foo2(; N = 100, K)
+        @inferred AbstractGSBPs.get_K(m)
+        @test AbstractGSBPs.get_K(m) == maximum(m.skl.r)
+    end
+end
+
 @testset "rand_rnew()" begin
     for (s, p) in Iterators.product([1.0, 2.0, 100], [1e-5, 5e-1, 1 - 1e-5])
         m = Foo2(; p, s)
