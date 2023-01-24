@@ -23,7 +23,7 @@ end
 
 @testset "step_d!()" begin
     m = Foo2(; N = 100, K = 10)
-    d0 = deepcopy(get_labels(m))
+    d0 = deepcopy(get_cluster_labels(m))
     @inferred AbstractGSBPs.step_d!(m)
     @test length(m.skl.d) == length(d0)
     @test all(m.skl.d .∈ Ref([1, 3]))
@@ -73,20 +73,20 @@ end
     end
 end
 
-# @testset "get_fgrid!()" begin
+# @testset "gen_mixture_density!()" begin
 #     ygrid = LinRange(0.0, 1.0, 10) |> collect
 #     xgrid = LinRange(0.0, 1.0, 10) |> collect
 #     d = [1; 2; 3]
 #     r = [1; 2; 3]
 #     m = Skeleton(; y = rand(3), x = rand(3), ygrid, xgrid, r, d) |> Foo
-#     @inferred get_fgrid!(m)
-#     fgrid = get_fgrid!(m)
+#     @inferred gen_mixture_density!(m)
+#     fgrid = gen_mixture_density!(m)
 #     @test length(fgrid) == length(ygrid)
-#     @test 0 == @allocated get_fgrid!(m; fgrid)
+#     @test 0 == @allocated gen_mixture_density!(m; fgrid)
 #     @test all(fgrid .== m.skl.w[1] + 2 * m.skl.w[3])
 #     for i in 1:100
 #         m = Skeleton(; y = rand(1), x = rand(1), ygrid, xgrid) |> Foo
-#         get_fgrid!(m; fgrid)
+#         gen_mixture_density!(m; fgrid)
 #     end
 # end
 

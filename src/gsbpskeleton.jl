@@ -25,8 +25,8 @@ See also [`AbstractGSBP`](@ref).
 """
 struct GSBPSkeleton{T, S}
     # Data
-    y::Vector{T} # outcomes
-    x::Vector{S} # predictors
+    y::Vector{T} # sample of outcomes
+    x::Vector{S} # sample of features
     # Hyperparameters
     a0p::Float64 # p ~ Beta(a0p, b0p), α in [1]
     b0p::Float64 # p ~ Beta(a0p, b0p), β in [1]
@@ -40,7 +40,7 @@ struct GSBPSkeleton{T, S}
     # Transformed parameters
     K::Base.RefValue{Int} # := max(r)
     function GSBPSkeleton(;
-        # Data
+        # Required data
         y::Vector{T},
         x::Vector{S},
         # Hyperparameters
@@ -68,9 +68,11 @@ struct GSBPSkeleton{T, S}
         val_r(r, y)
         val_d(d, r)
         # Generate transformed parameters
-        K = maximum(r; init = 0)
+        rp = Ref(p)
+        rs = Ref(s)
+        rK = Ref(maximum(r; init = 0))
         # Return the validated skeleton
-        new{T, S}(y, x, a0p, b0p, a0s, b0s, Ref(p), Ref(s), r, d, Ref(K))
+        new{T, S}(y, x, a0p, b0p, a0s, b0s, rp, rs, r, d, rK)
     end
 end
 #endregion
@@ -168,47 +170,47 @@ end
 
 #region Validators
 
-function val_y(y)
+function val_y(y::Vector{T}) where {T}
     @assert length(y) > 0
     @assert length(y[1]) > 0
     @assert all(length.(y) .== length(y[1]))
 end
 
-function val_x(x, y)
+function val_x(x::Vector{S}, y::Vector{T}) where {S, T}
     @assert length(x) == length(y)
     @assert all(length.(x) .== length(x[1]))
 end
 
-function val_a0p(a0p)
+function val_a0p(a0p::Float64)
     @assert a0p > 0
 end
 
-function val_b0p(b0p)
+function val_b0p(b0p::Float64)
     @assert b0p > 0
 end
 
-function val_a0s(a0s)
+function val_a0s(a0s::Float64)
     @assert a0s > 0
 end
 
-function val_b0s(b0s)
+function val_b0s(b0s::Float64)
     @assert b0s > 0
 end
 
-function val_p(p)
+function val_p(p::Float64)
     @assert 0 < p < 1
 end
 
-function val_s(s)
+function val_s(s::Float64)
     @assert s > 0
 end
 
-function val_r(r, y)
+function val_r(r::Vector{Int}, y::Vector{T}) where {T}
     @assert length(r) == length(y)
     @assert all(r .> 0)
 end
 
-function val_d(d, r)
+function val_d(d::Vector{Int}, r::Vector{Int})
     @assert length(d) == length(r)
     @assert all(1 .≤ d .≤ r)
 end

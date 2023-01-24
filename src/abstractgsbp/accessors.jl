@@ -21,12 +21,12 @@ function get_x(m::AbstractGSBP)
 end
 
 @doc raw"""
-    get_labels(m::AbstractGSBP)
+    get_cluster_labels(m::AbstractGSBP)
 
 Return the vector of cluster labels: ``d = (d_1, \ldots, d_N)``.
 
 See also [`AbstractGSBP`](@ref).
 """
-function get_labels(m::AbstractGSBP)
+function get_cluster_labels(m::AbstractGSBP)
     return get_skeleton(m).d
 end

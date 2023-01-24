@@ -12,11 +12,11 @@ end
     @test 0 == @allocated get_x(m)
 end
 
-@testset "get_labels()" begin
+@testset "get_cluster_labels()" begin
     m = Foo2(; N = 100, K = 10)
-    @inferred get_labels(m)
-    @test get_labels(m) === m.skl.d
-    @test 0 == @allocated get_labels(m)
+    @inferred get_cluster_labels(m)
+    @test get_cluster_labels(m) === m.skl.d
+    @test 0 == @allocated get_cluster_labels(m)
 end
 
 @testset "get_K()" begin

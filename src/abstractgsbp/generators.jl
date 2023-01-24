@@ -1,24 +1,11 @@
 @doc raw"""
-    get_weight(m::AbstractGSBP, k0::Int)
+    gen_mixture_weight(m::AbstractGSBP, k0::Int)
 
-Return the `k0`th weight of the mixture implied by the model, namely:
+Return the ``k_0``-th mixture weight.
 
-```math
-\begin{aligned}
-    w_k
-    &=
-    \sum_{\ell \geq k}
-    \text{NegativeBinomial}(\ell \mid s, p) / \ell
-\end{aligned}
-```
-
-where ``\text{NegativeBinomial}(\cdot \mid s, p)`` denotes the pmf of
-a ``\text{NegativeBinomial}(s, p)`` distribution at ``\ell``
-[([1])](https://doi.org/10.1016/j.spl.2009.01.005).
-
-See also [`AbstractGSBP`](@ref).
+See also [`AbstractGSBPs`](@ref).
 """
-function get_weight(m::AbstractGSBP, k0::Int)
+function gen_mixture_weight(m::AbstractGSBP, k0::Int)
     (; p, s) = get_skeleton(m)
     logwk = 0.0
     if s[] ≈ 2.0
@@ -40,44 +27,53 @@ function get_weight(m::AbstractGSBP, k0::Int)
 end
 
 @doc raw"""
-    get_fgrid!(m::AbstractGSBP; fgrid::Vector{Float64}, ygrid, xgrid)
+    gen_mixture_density(m::AbstractGSBP, y0, x0)
 
-Replace `fgrid` with ``p(y_{new} | x_{new}, \theta)`` for
-each ``(y_{new}, x_{new})`` in `zip(ygrid, xgrid)`, using the current atoms.
+Compute the mixture density at an out-of-sample point ``(y_0, x_0)``.
 
-See also [`AbstractGSBP`](@ref).
+See also [`AbstractGSBPs`](@ref).
 """
-function get_fgrid!(m::AbstractGSBP; fgrid::Vector{Float64}, ygrid, xgrid)
-    (; y, x, w, K) = get_skeleton(m)
-    w = zeros(K[])
-    val_ygrid(ygrid, y)
-    val_fgrid(fgrid, ygrid)
-    val_xgrid(xgrid, ygrid, x)
-    for k0 in 1:K[]
-        w[k0] = get_weight(m, k0)
-    end
-    for i in eachindex(fgrid)
-        f0 = 0.0
-        y0 = ygrid[i]
-        x0 = xgrid[i]
-        for k in 1:K[]
-            f0 += w[k] * exp(loglikcontrib(m, y0, x0, k))
-        end
-        fgrid[i] = f0
-    end
-    return fgrid
+function gen_mixture_density(m::AbstractGSBP, ygrid, xgrid)
+    # (; y, x, K) = get_skeleton(m)
+    # w = zeros(K[])
+    # val_ygrid(ygrid, y)
+    # val_mgrid(mgrid, ygrid)
+    # val_xgrid(xgrid, ygrid, x)
+    # for k0 in 1:K[]
+    #     w[k0] = gen_mixture_weight(m, k0)
+    # end
+    # for i in eachindex(mgrid)
+    #     f0 = 0.0
+    #     y0 = ygrid[i]
+    #     x0 = xgrid[i]
+    #     for k in 1:K[]
+    #         f0 += w[k] * exp(loglikcontrib(m, y0, x0, k))
+    #     end
+    #     mgrid[i] = f0
+    # end
+    # return mgrid
 end
 
-function val_ygrid_(ygrid::Vector{T}, y::Vector{T}) where {T}
+function val_ygrid(
+        ygrid::Vector{T},
+        y::Vector{T}
+    ) where {T}
     @assert !isempty(ygrid)
     @assert all(length.(ygrid) .== length(y[1]))
 end
 
-function val_fgrid_(fgrid::Vector{Float64}, ygrid::Vector{T}) where {T}
-    @assert length(fgrid) == length(ygrid)
+function val_mgrid(
+        mgrid::Vector{Float64},
+        ygrid::Vector{T}
+    ) where {T}
+    @assert length(mgrid) == length(ygrid)
 end
 
-function val_xgrid_(xgrid::Vector{T}, ygrid::Vector{S}, x::Vector{T}) where {T, S}
+function val_xgrid(
+        xgrid::Vector{T},
+        ygrid::Vector{S},
+        x::Vector{T}
+    ) where {T, S}
     @assert length(xgrid) == length(ygrid)
     @assert all(length.(xgrid) .== length(x[1]))
 end

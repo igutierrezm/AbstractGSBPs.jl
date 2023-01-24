@@ -2,37 +2,43 @@
     AbstractGSBPs
 
 AbstractGSBPs offers tools for working with geometric stick breaking
-processes [(GSBP)](https://doi.org/10.1016/j.csda.2020.106940), namely[^1][^2]
+processes [(GSBP)](https://doi.org/10.1016/j.csda.2020.106940), namely:[^1]
 
 ```math
 \begin{aligned}
-y_i | x_i, d_i, \theta_{d_i}
-& \sim
-f(\cdot | x_i, \theta_{d_i}),
-&
-i
-&=
-1, \ldots, N
-\\
-d_i | r_i
-& \sim
-\text{Uniform}(\cdot | 1, r_i),
-\\
-r_i - 1 | s, p
-& \sim
-\text{NegativeBinomial}(\cdot | s, p),
-\\
-s
-& \sim
-\text{Gamma}(\cdot | a_{0s}, 1 / b_{0s}),
-\\
-p
-& \sim
-\text{Gamma}(\cdot | a_{0p}, 1 / b_{0p}),
-\\
-\theta_k
-& \sim
-g(\cdot),
+    y_i \mid x_i, w, \theta
+    & \sim
+    \textstyle{\sum_{k \geq 1}}
+    w_k f(\cdot \mid x_i, \theta_k),
+    &
+    i
+    &=
+    1, \ldots, N
+    \\
+    w_k
+    & =
+    \textstyle{\sum_{\ell \geq k}}
+    \text{NegativeBinomial}(\ell \mid s, p) / \ell,
+    &
+    k
+    &\in
+    \mathbb{N}
+    \\
+    \theta_k
+    & \sim
+    g(\cdot),
+    &
+    k
+    &\in
+    \mathbb{N}
+    \\
+    s
+    & \sim
+    \text{Gamma}(\cdot \mid a_{0s}, 1 / b_{0s}),
+    \\
+    p
+    & \sim
+    \text{Gamma}(\cdot \mid a_{0p}, 1 / b_{0p}),
 \end{aligned}
 ```
 
@@ -44,11 +50,19 @@ where:
 * ``(a_{0p}, a_{0s}, b_{0p}, b_{0s})`` is a tuple of hyperparameters.
 * ``f(\cdot)`` and ``g(\cdot)`` are known pdfs/pmfs.
 
+and, for notational convenience:
+
+- I parametrize each distribution as in Distributions.jl.
+- I represent each pdf/pmf using the so-called *probability notation*
+    [[1, p. 6]](http://www.stat.columbia.edu/~gelman/book/)[^2].
+- I represent each distribution through its pdf/pmf[^3].
+
 In particular, `AbstractGSBPs` offers methods for:
 
 - Defining custom GSBPs.
 - Initializing their parameters.
-- Updating their parameters using the Gibbs samplers decribed in
+- Evaluating the mixture density at an out-of-sample point.
+- Performing one iteration of the Gibbs samplers decribed in
     [[1]](https://doi.org/10.1016/j.csda.2020.106940) and
     [[2]](https://pubmed.ncbi.nlm.nih.gov/25279391).
 
@@ -59,11 +73,14 @@ In particular, `AbstractGSBPs` offers methods for:
     and a random ``s``.
 
 [^2]:
-    For notational convenience,
-    I'll parametrize each distribution as in
-    Distributions.jl, I'll represent each distribution through its pdf/pmf, and
-    I'll represent each pdf/pmf using the so-called *probability notation*
-    [[1, p. 6]](http://www.stat.columbia.edu/~gelman/book/).
+    So, for example,
+    ``\text{Gamma}(\cdot \mid a_{0p}, 1 / b_{0p})`` represents
+    the pdf of a ``\text{Gamma}(a_{0p}, 1 / b_{0p})`` distribution.
+
+[^3]:
+    So, for example,
+    ``p \sim \text{Gamma}(\cdot \mid a_{0p}, 1 / b_{0p})``
+    should be interpreted as ``p \sim \text{Gamma}(a_{0p}, 1 / b_{0p})``.
 """
 module AbstractGSBPs
 
@@ -75,12 +92,13 @@ using SpecialFunctions: logabsbeta
 
 # Exports
 export AbstractGSBP
-export GSBPSkeleton
-export get_labels
+export get_cluster_labels
 export get_skeleton
-export get_weight
+export gen_mixture_weight
+export gen_mixture_density
 export get_x
 export get_y
+export GSBPSkeleton
 export init_a0p
 export init_a0s
 export init_b0p
@@ -89,6 +107,8 @@ export init_d
 export init_p
 export init_r
 export init_s
+export init_xgrid
+export init_ygrid
 export loglikcontrib
 export pop_observation!
 export push_observation!
